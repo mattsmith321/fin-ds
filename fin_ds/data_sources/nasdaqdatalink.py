@@ -4,7 +4,7 @@ import pandas as pd
 from .base_data_source import BaseDataSource
 
 
-class NasdaqDataSource(BaseDataSource):
+class NasdaqDataLinkDataSource(BaseDataSource):
     """
     A data source class for fetching historical stock data from the Nasdaq Data Link API.
 
@@ -36,7 +36,6 @@ class NasdaqDataSource(BaseDataSource):
         "adj_low",
         "adj_close",
         "adj_volume",
-        "ticker",
         "dividend",
         "split",
     ]
@@ -74,6 +73,7 @@ class NasdaqDataSource(BaseDataSource):
         # line to fetch data from the WIKI dataset, which is free.
         # df = nasdaqdatalink.Dataset(f"WIKI/{ticker}").data().to_pandas()
 
+        ticker = ticker.replace("-", "_")
         df = nasdaqdatalink.get_table(
             "QUOTEMEDIA/PRICES",
             ticker=[f"{ticker}"],

@@ -4,7 +4,7 @@ import yfinance as api_client
 from .base_data_source import BaseDataSource
 
 
-class YahooFinanceDataSource(BaseDataSource):
+class YFinanceDataSource(BaseDataSource):
     # Set this to False if no api key is required
     api_key_required = False
 
