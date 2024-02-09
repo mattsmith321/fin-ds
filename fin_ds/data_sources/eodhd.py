@@ -7,6 +7,7 @@ from .base_data_source import BaseDataSource
 class EODHDDataSource(BaseDataSource):
     COLUMN_MAPPINGS = {
         "adjusted_close": "adj_close",
+        "symbol": "ticker",
     }
 
     COLUMN_ORDER = [
@@ -16,8 +17,6 @@ class EODHDDataSource(BaseDataSource):
         "close",
         "volume",
         "adj_close",
-        "symbol",
-        "interval",
     ]
 
     def __init__(self, name, api_key, force_refresh=False):

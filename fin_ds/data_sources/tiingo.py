@@ -24,7 +24,7 @@ class TiingoDataSource(BaseDataSource):
         "adjOpen": "adj_open",
         "adjVolume": "adj_volume",
         "divCash": "dividend",
-        "splitFactor": "split_factor",
+        "splitFactor": "split",
     }
 
     COLUMN_ORDER = [
@@ -38,7 +38,7 @@ class TiingoDataSource(BaseDataSource):
         "adj_low",
         "adj_close",
         "dividend",
-        "split_factor",
+        "split",
     ]
 
     def __init__(self, name, api_key, force_refresh=False):
