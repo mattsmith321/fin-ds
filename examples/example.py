@@ -1,9 +1,8 @@
 from fin_ds.data_source_factory import DataSourceFactory
 
 
-data_sources = DataSourceFactory.data_sources
+# data_sources = DataSourceFactory.data_sources
 # data_sources = ["Alpha Vantage", "EODHD", "Nasdaq", "Tiingo", "Yahoo Finance"]
-# data_sources = ["Tiingo"]
 
 tickers = ["AAPL"]
 # tickers = [
@@ -28,6 +27,14 @@ tickers = ["AAPL"]
 #     "AAPL",
 #     "MRK",
 # ]
+
+print(DataSourceFactory.data_sources)
+
+from portfoliovisualizer import PortfolioVisualizerDataSource
+
+data_sources = ["PortfolioVisualizer"]
+
+DataSourceFactory.register_data_source(PortfolioVisualizerDataSource)
 
 print(DataSourceFactory.data_sources)
 

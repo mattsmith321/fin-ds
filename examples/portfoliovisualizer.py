@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 from pandas.tseries.offsets import MonthEnd
 
-from .base_data_source import BaseDataSource
+from fin_ds.data_sources.base_data_source import BaseDataSource
 
 # module-level (or global-level) variables/constants
 logger = logging.getLogger(__name__)
