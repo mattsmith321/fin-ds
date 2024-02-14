@@ -1,11 +1,11 @@
 import logging
 from abc import ABC
-from datetime import datetime, timedelta
 
 import pandas as pd
 
-from ..utils.cache_util import CacheUtil
-from ..utils.df_util import DFUtil
+from fin_ds.backfill.backfill import Backfill
+from fin_ds.utils.cache_util import CacheUtil
+from fin_ds.utils.df_util import DFUtil
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,9 @@ class BaseDataSource(ABC):
         self.name = name
         self.force_refresh = force_refresh
 
-    def get_ticker_data(self, ticker: str, interval: str = "daily") -> pd.DataFrame:
+    def get_ticker_data(
+        self, ticker: str, interval: str = "daily", backfill: bool = False
+    ) -> pd.DataFrame:
         """
         Fetch and return the data for a given ticker and aggregate it based on the specified interval.
 
@@ -41,17 +43,31 @@ class BaseDataSource(ABC):
         Returns:
             DataFrame: A pandas DataFrame containing the aggregated data.
         """
-        df = self._fetch_data(ticker)
+        original_df = self._fetch_data(ticker)
+
+        if backfill:
+            self.backfill = Backfill()
+            backfill_ticker = self.backfill.lookup_backfill_ticker(ticker)
+            if backfill_ticker:
+                backfill_df = self._fetch_data(backfill_ticker)
+                combined_df = DFUtil.splice(original_df, backfill_df)
+            else:
+                combined_df = original_df
+        else:
+            combined_df = original_df
+
+        # combined_df['ticker'] = ticker # Assign the original ticker to all rows
+        # combined_df.loc[combined_df.index < original_df.index.min(), 'ticker'] = backfill_ticker # Update ticker for backfill rows
 
         if interval == "daily":
             # No aggregation is needed if daily data is requested
-            return df
+            return combined_df
         elif interval == "weekly":
             # Aggregate data on a weekly basis
-            return df.resample("W").last()
+            return combined_df.resample("W").last()
         elif interval == "monthly":
             # Aggregate data on a monthly basis, similar to get_monthly_data
-            return df.resample("ME").last()
+            return combined_df.resample("ME").last()
         else:
             raise ValueError(
                 f"Unsupported interval: {interval}. Supported intervals are 'daily', 'weekly', 'monthly'."
@@ -88,7 +104,7 @@ class BaseDataSource(ABC):
                 # much data is returned.
 
                 # Fetch and format the latest data from the source
-                latest_df = self._fetch_and_format_data(ticker)
+                latest_df = self._fetch_and_process_data(ticker)
 
                 # Merge updates from latest into cached
                 merged_df = DFUtil.merge(cached_df, latest_df)
@@ -101,23 +117,23 @@ class BaseDataSource(ABC):
                 return cached_df
         else:
             # Fetch and format the latest data from the source
-            latest_df = self._fetch_and_format_data(ticker)
+            latest_df = self._fetch_and_process_data(ticker)
 
             # Cache the fetched data
             CacheUtil.save_to_cache(cache_path, latest_df)
 
             return latest_df
 
-    def _fetch_and_format_data(self, ticker: str) -> pd.DataFrame:
+    def _fetch_and_process_data(self, ticker: str) -> pd.DataFrame:
         # Fetch data from source via subclass-specific method
         source_df = self._fetch_data_from_source(ticker)
 
         # Standardize the DataFrame
-        formatted_df = self._format_dataframe(source_df)
+        processed_df = self._preprocess_data(ticker, source_df)
 
-        return formatted_df
+        return processed_df
 
-    def _format_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _preprocess_data(self, ticker: str, df: pd.DataFrame) -> pd.DataFrame:
         """
         Standardize the DataFrame by renaming columns and reordering them.
 
@@ -127,6 +143,9 @@ class BaseDataSource(ABC):
         Returns:
             pd.DataFrame: The standardized DataFrame.
         """
+        # Add the ticker as a column. Usefill when backfilled data is added.
+        df["ticker"] = ticker
+
         # Rename columns
         df = df.rename(columns=self.COLUMN_MAPPINGS)
 

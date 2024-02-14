@@ -1,7 +1,7 @@
 import pandas as pd
 from alpha_vantage.timeseries import TimeSeries
 
-from .base_data_source import BaseDataSource
+from fin_ds.data_sources.base_data_source import BaseDataSource
 
 
 class AlphaVantageDataSource(BaseDataSource):
@@ -17,6 +17,7 @@ class AlphaVantageDataSource(BaseDataSource):
     }
 
     COLUMN_ORDER = [
+        "ticker",
         "open",
         "high",
         "low",

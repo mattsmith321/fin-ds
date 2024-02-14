@@ -1,7 +1,7 @@
 import pandas as pd
 from eodhd import APIClient
 
-from .base_data_source import BaseDataSource
+from fin_ds.data_sources.base_data_source import BaseDataSource
 
 
 class EODHDDataSource(BaseDataSource):
@@ -11,6 +11,7 @@ class EODHDDataSource(BaseDataSource):
     }
 
     COLUMN_ORDER = [
+        "ticker",
         "open",
         "high",
         "low",

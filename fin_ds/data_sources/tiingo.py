@@ -1,7 +1,7 @@
 import pandas as pd
 from tiingo import TiingoClient
 
-from .base_data_source import BaseDataSource
+from fin_ds.data_sources.base_data_source import BaseDataSource
 
 
 class TiingoDataSource(BaseDataSource):
@@ -28,6 +28,7 @@ class TiingoDataSource(BaseDataSource):
     }
 
     COLUMN_ORDER = [
+        "ticker",
         "open",
         "high",
         "low",

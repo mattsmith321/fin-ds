@@ -1,7 +1,7 @@
 import pandas as pd
 import yfinance as api_client
 
-from .base_data_source import BaseDataSource
+from fin_ds.data_sources.base_data_source import BaseDataSource
 
 
 class YFinanceDataSource(BaseDataSource):
@@ -19,6 +19,7 @@ class YFinanceDataSource(BaseDataSource):
     }
 
     COLUMN_ORDER = [
+        "ticker",
         "open",
         "high",
         "low",

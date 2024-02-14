@@ -1,10 +1,15 @@
 from fin_ds.data_source_factory import DataSourceFactory
 
 
+from portfoliovisualizer import PortfolioVisualizerDataSource
+
+# data_sources = ["PortfolioVisualizer"]
+
 # data_sources = DataSourceFactory.data_sources
 # data_sources = ["Alpha Vantage", "EODHD", "Nasdaq", "Tiingo", "Yahoo Finance"]
+data_sources = ["Tiingo"]
 
-tickers = ["AAPL"]
+tickers = ["VFINX", "VOO"]
 # tickers = [
 #     "WMT",
 #     "JNJ",
@@ -30,10 +35,6 @@ tickers = ["AAPL"]
 
 print(DataSourceFactory.data_sources)
 
-from portfoliovisualizer import PortfolioVisualizerDataSource
-
-data_sources = ["PortfolioVisualizer"]
-
 DataSourceFactory.register_data_source(PortfolioVisualizerDataSource)
 
 print(DataSourceFactory.data_sources)
@@ -47,5 +48,15 @@ for data_source in data_sources:
         df = ds.get_ticker_data(ticker)
         print(f"    - get_ticker_data(ticker) found {len(df)} records.")
 
-        df = ds.get_ticker_data(ticker, "monthly")
-        print(f"    - get_ticker_data(ticker, 'monthly') found {len(df)} records.")
+        df = ds.get_ticker_data(ticker, backfill=True)
+        print(f"    - get_ticker_data(ticker, backfill=True) found {len(df)} records.")
+
+        df = ds.get_ticker_data(ticker, interval="monthly")
+        print(
+            f"    - get_ticker_data(ticker, , interval='monthly') found {len(df)} records."
+        )
+
+        df = ds.get_ticker_data(ticker, interval="monthly", backfill=True)
+        print(
+            f"    - get_ticker_data(ticker, interval='monthly', backfill=True) found {len(df)} records."
+        )

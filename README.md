@@ -19,6 +19,7 @@ Here are the column mappings from each data source into fin-ds:
 | fin-ds    | Alpha Vantage      | EODHD     | Nasdaq    | Tiingo      | Yahoo Finance |
 | :---      | :---               | :---      | :---      | :---        | :---          |
 | date      | date               | date      | date      | date        | Date          |
+| ticker    | -                  | symbol    | ticker    | -           | -             |
 | open      | 1. open            | open      | open      | open        | Open          |
 | high      | 2. high            | high      | high      | high        | High          |
 | low       | 3. low             | low       | low       | low         | Low           |
@@ -30,9 +31,7 @@ Here are the column mappings from each data source into fin-ds:
 | adj_close | 5. adjusted close  | adj_close | adj_close | adjClose    | Adj Close     |
 | dividend  | 7. dividend amount | -         | dividend  | divCash     | -             |
 | split     | -                  | -         | split     | splitFactor | -             |
-| -         | -                  | symbol    | ticker    | -           | -             |
 | -         | -                  | interval  | -         | -           | -             |
-
 
 
 ## Overview
@@ -47,14 +46,13 @@ Here are the column mappings from each data source into fin-ds:
 The detailed requirements are spelled out in the requirements.txt file but at a high level, the following packages are required:
 * pandas - Because pandas makes data analysis so much easier.
 * python-decouple - Used to pull API keys from environment variables.
-* Data source clients - Install the following packages for each data source you plan to use:
+* Data source clients - Install the following packages for each data source you plan to use. Note that you only need to install the clients that you plan to use.
   * [alpha-vantage](https://pypi.org/project/alpha-vantage/)
   * [eodhd](https://pypi.org/project/eodhd/)
   * [nasdaq-data-link](https://pypi.org/project/Nasdaq-Data-Link/)
   * [tiingo](https://pypi.org/project/tiingo/)
   * [yfinance](https://pypi.org/project/yfinance/)
-  * [openpyxl](https://pypi.org/project/openpyxl/) - Technically not a data source but needed if reading from Excel.
-
+  
 ### Installation
 
 As with many other Python applications, it is recommended to install this package in a virtual environment.
@@ -230,6 +228,7 @@ For a more detailed changelog, including the list of all changes for each versio
 * 0.3.1 - Fixed how tickers with special characters are handled (at least for BRK-A).
 * 1.0.0 - Made changes to class and module names to support dynamic loading.
 * 1.1.0 - Added dynamic registration of custom data source classes.
+* 2.0.0 - Added ability to backfill tickers to extend data. This required adding the ticker column so any previous cached data files need to be deleted.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
