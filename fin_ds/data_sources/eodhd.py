@@ -1,5 +1,4 @@
 import pandas as pd
-from eodhd import APIClient
 
 from fin_ds.data_sources.base_data_source import BaseDataSource
 
@@ -23,6 +22,9 @@ class EODHDDataSource(BaseDataSource):
     def __init__(self, name, api_key, force_refresh=False):
         # Call the base class __init__
         super().__init__(name, force_refresh)
+
+        # Lazy load the library to avoid importing it if not needed
+        from eodhd import APIClient
 
         self.api_client = APIClient(api_key)
 

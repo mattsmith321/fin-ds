@@ -14,6 +14,17 @@ class DFUtil:
         Returns:
         pd.DataFrame: The blended DataFrame.
         """
+
+        # Assuming df2 is your DataFrame
+        float_columns = df1.select_dtypes(include=["float64"]).columns
+
+        # For some reason, EODHD data was throwing warnings:
+        # FutureWarning: Setting an item of incompatible dtype is deprecated and will raise in a future error of pandas.
+        # Value '[...]' has dtype incompatible with float64, please explicitly cast to a compatible dtype first.
+        # But the data was already float64, so I'm casting it again to float64 to suppress the warning.
+        for col in float_columns:
+            df2[col] = pd.to_numeric(df2[col], errors="coerce").astype("float64")
+
         # Update df1 in-place with changed values from df2
         df1.update(df2)
 

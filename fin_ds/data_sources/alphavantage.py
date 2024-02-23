@@ -1,5 +1,4 @@
 import pandas as pd
-from alpha_vantage.timeseries import TimeSeries
 
 from fin_ds.data_sources.base_data_source import BaseDataSource
 
@@ -30,6 +29,9 @@ class AlphaVantageDataSource(BaseDataSource):
     def __init__(self, name, api_key, force_refresh=False):
         # Call the base class __init__
         super().__init__(name, force_refresh)
+
+        # Lazy load the library to avoid importing it if not needed
+        from alpha_vantage.timeseries import TimeSeries
 
         self.api_client = TimeSeries(key=api_key, output_format="pandas")
 

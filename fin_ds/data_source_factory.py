@@ -100,6 +100,10 @@ class DataSourceFactory:
         if not issubclass(data_source_class, BaseDataSource):
             raise ValueError(f"Data source class must subclass BaseDataSource")
 
+        # Ensure built-in data sources are loaded
+        if not cls._data_sources:
+            cls._get_data_sources()
+
         # Automatically parse the class name, removing 'DataSource' suffix if present
         class_name = data_source_class.__name__.removesuffix("DataSource")
 

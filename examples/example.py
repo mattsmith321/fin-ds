@@ -6,10 +6,10 @@ from portfoliovisualizer import PortfolioVisualizerDataSource
 # data_sources = ["PortfolioVisualizer"]
 
 # data_sources = DataSourceFactory.data_sources
-# data_sources = ["Alpha Vantage", "EODHD", "Nasdaq", "Tiingo", "Yahoo Finance"]
+# data_sources = ["AlphaVantage", "EODHD", "NasdaqDataLink", "Tiingo", "YFinance"]
 data_sources = ["Tiingo"]
 
-tickers = ["VFINX", "VOO"]
+tickers = ["VFINX"]
 # tickers = [
 #     "WMT",
 #     "JNJ",

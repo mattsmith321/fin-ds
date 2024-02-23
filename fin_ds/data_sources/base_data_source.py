@@ -143,11 +143,12 @@ class BaseDataSource(ABC):
         Returns:
             pd.DataFrame: The standardized DataFrame.
         """
-        # Add the ticker as a column. Usefill when backfilled data is added.
-        df["ticker"] = ticker
-
         # Rename columns
         df = df.rename(columns=self.COLUMN_MAPPINGS)
+
+        # Add the ticker as a column. Used when backfilled data is added.
+        if "ticker" not in df.columns:
+            df["ticker"] = ticker
 
         # Reorder columns
         df = df[self.COLUMN_ORDER]

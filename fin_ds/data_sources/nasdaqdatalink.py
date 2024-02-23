@@ -1,4 +1,3 @@
-import nasdaqdatalink
 import pandas as pd
 
 from fin_ds.data_sources.base_data_source import BaseDataSource
@@ -73,6 +72,9 @@ class NasdaqDataLinkDataSource(BaseDataSource):
         # If you don't have a paid subscription to the NASDAQ Data Link API, you can use the following
         # line to fetch data from the WIKI dataset, which is free.
         # df = nasdaqdatalink.Dataset(f"WIKI/{ticker}").data().to_pandas()
+
+        # Lazy load the library to avoid importing it if not needed
+        import nasdaqdatalink
 
         ticker = ticker.replace("-", "_")
         df = nasdaqdatalink.get_table(

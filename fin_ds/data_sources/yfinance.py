@@ -1,5 +1,4 @@
 import pandas as pd
-import yfinance as api_client
 
 from fin_ds.data_sources.base_data_source import BaseDataSource
 
@@ -42,6 +41,9 @@ class YFinanceDataSource(BaseDataSource):
         Returns:
             list: A list of historical stock data points (e.g., OHLC prices) as dictionaries.
         """
+        # Lazy load the library to avoid importing it if not needed
+        import yfinance as api_client
+
         df = api_client.download(ticker, interval="1d", progress=False)
 
         return df

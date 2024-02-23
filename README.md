@@ -16,27 +16,27 @@ To see the list of available data sources call `DataSourceFactory.data_sources`:
 ```
 
 Here are the column mappings from each data source into fin-ds:
-| fin-ds    | Alpha Vantage      | EODHD     | Nasdaq    | Tiingo      | Yahoo Finance |
-| :---      | :---               | :---      | :---      | :---        | :---          |
-| date      | date               | date      | date      | date        | Date          |
-| ticker    | -                  | symbol    | ticker    | -           | -             |
-| open      | 1. open            | open      | open      | open        | Open          |
-| high      | 2. high            | high      | high      | high        | High          |
-| low       | 3. low             | low       | low       | low         | Low           |
-| close     | 4. close           | close     | close     | close       | Close         |
-| volume    | 6. volume          | volume    | volume    | volume      | Volume        |
-| adj_open  | -                  | -         | adj_open  | adjOpen     | -             |
-| adj_high  | -                  | -         | adj_high  | adjHigh     | -             |
-| adj_low   | -                  | -         | adj_low   | adjLow      | -             |
-| adj_close | 5. adjusted close  | adj_close | adj_close | adjClose    | Adj Close     |
-| dividend  | 7. dividend amount | -         | dividend  | divCash     | -             |
-| split     | -                  | -         | split     | splitFactor | -             |
-| -         | -                  | interval  | -         | -           | -             |
+| fin-ds    | AlphaVantage       | EODHD     | NasdaqDataLink | Tiingo      | YFinance  |
+| :---      | :---               | :---      | :---           | :---        | :---      |
+| date      | date               | date      | date           | date        | Date      |
+| ticker    | -                  | symbol    | ticker         | -           | -         |
+| open      | 1. open            | open      | open           | open        | Open      |
+| high      | 2. high            | high      | high           | high        | High      |
+| low       | 3. low             | low       | low            | low         | Low       |
+| close     | 4. close           | close     | close          | close       | Close     |
+| volume    | 6. volume          | volume    | volume         | volume      | Volume    |
+| adj_open  | -                  | -         | adj_open       | adjOpen     | -         |
+| adj_high  | -                  | -         | adj_high       | adjHigh     | -         |
+| adj_low   | -                  | -         | adj_low        | adjLow      | -         |
+| adj_close | 5. adjusted close  | adj_close | adj_close      | adjClose    | Adj Close |
+| dividend  | 7. dividend amount | -         | dividend       | divCash     | -         |
+| split     | -                  | -         | split          | splitFactor | -         |
+| -         | -                  | interval  | -              | -           | -         |
 
 
 ## Overview
 
-`fin-ds` is a Python package designed to simplify the process of fetching financial OHLCV (Open, High, Low, Close, Volume) data from various sources through a unified interface. It abstracts away the differences between data source APIs, returning data in a standardized pandas DataFrame format. This makes it an ideal tool for financial analysis, algorithmic trading strategy development, and data science projects focusing on financial markets.
+`fin-ds` is a Python package designed to simplify the process of fetching financial OHLCV (Open, High, Low, Close, Volume) and adjusted data from various data sources through a unified interface. It abstracts away the differences between data source APIs, returning data in a standardized pandas DataFrame format. This makes it an ideal tool for financial analysis, algorithmic trading strategy development, and data science projects focusing on financial markets.
 
 
 ## Getting started

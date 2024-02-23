@@ -1,5 +1,4 @@
 import pandas as pd
-from tiingo import TiingoClient
 
 from fin_ds.data_sources.base_data_source import BaseDataSource
 
@@ -56,6 +55,9 @@ class TiingoDataSource(BaseDataSource):
         """
         # Call the base class __init__
         super().__init__(name, force_refresh)
+
+        # Lazy load the library to avoid importing it if not needed
+        from tiingo import TiingoClient
 
         tiingo_config = {"session": True, "api_key": api_key}
         self.api_client = TiingoClient(tiingo_config)
