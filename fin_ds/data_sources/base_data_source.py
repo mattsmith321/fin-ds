@@ -3,7 +3,6 @@ from abc import ABC
 
 import pandas as pd
 
-from fin_ds.backfill.backfill import Backfill
 from fin_ds.utils.cache_util import CacheUtil
 from fin_ds.utils.df_util import DFUtil
 
@@ -19,7 +18,7 @@ class BaseDataSource(ABC):
     start_date = "1950-01-01"
     end_date = pd.Timestamp.today().strftime("%Y-%m-%d")
 
-    def __init__(self, name, force_refresh=False):
+    def __init__(self, name):
         """
         Initialize the data source with a specific name.
 
@@ -27,10 +26,13 @@ class BaseDataSource(ABC):
             name (str): The name of the data source.
         """
         self.name = name
-        self.force_refresh = force_refresh
 
-    def get_ticker_data(
-        self, ticker: str, interval: str = "daily", backfill: bool = False
+    def get_eod_data(
+        self,
+        ticker: str,
+        interval: str = "daily",
+        backfill_ticker: str = None,
+        max_cache_age_in_hours: int = 12,
     ) -> pd.DataFrame:
         """
         Fetch and return the data for a given ticker and aggregate it based on the specified interval.
@@ -38,42 +40,55 @@ class BaseDataSource(ABC):
         Args:
             ticker (str): The stock ticker symbol for which to fetch the data.
             interval (str, optional): The interval for data aggregation. Defaults to 'daily'.
-                                       Supported values: 'daily', 'weekly', 'monthly'.
+                                    Supported values: 'daily', 'weekly', 'monthly'.
+            backfill_ticker (str, optional): The ticker symbol to use for backfilling data. Defaults to None.
+            max_cache_age_in_hours (int, optional): The maximum age of cached data. Defaults to 12.
 
         Returns:
             DataFrame: A pandas DataFrame containing the aggregated data.
         """
-        original_df = self._fetch_data(ticker)
+        original_df = self._fetch_data(ticker, max_cache_age_in_hours)
 
-        if backfill:
-            self.backfill = Backfill()
-            backfill_ticker = self.backfill.lookup_backfill_ticker(ticker)
-            if backfill_ticker:
-                backfill_df = self._fetch_data(backfill_ticker)
-                combined_df = DFUtil.splice(original_df, backfill_df)
-            else:
-                combined_df = original_df
+        combined_df = self._backfill_data(backfill_ticker, max_cache_age_in_hours, original_df)
+
+        # Ensure the index is a DatetimeIndex especially after loading from cache
+        combined_df.index = pd.to_datetime(combined_df.index)
+
+        # Resample data based on the specified interval
+        aggregated_df = self._aggregate_data(combined_df, interval)
+
+        return aggregated_df
+
+    def _backfill_data(self, backfill_ticker, max_cache_age_in_hours, original_df):
+        """
+        Backfill the original DataFrame with historical data from a specified backfill ticker.
+
+        This method enhances the original dataset by incorporating additional historical data
+        from the backfill ticker provided. If no backfill ticker is specified, it returns the
+        original data unchanged.
+
+        Args:
+            backfill_ticker (str): The ticker symbol to use for backfilling data. If None or empty,
+                                no backfilling is performed.
+            max_cache_age_in_hours (int): The maximum age of cached data in hours. Used to determine
+                                        whether to fetch fresh data.
+            original_df (pd.DataFrame): The original DataFrame containing data for the primary ticker.
+
+        Returns:
+            pd.DataFrame: A DataFrame that combines the original data with backfilled data if a
+                        backfill ticker is provided; otherwise, returns the original data.
+        """
+        if backfill_ticker:
+            # Fetch data for the backfill ticker, respecting the maximum cache age
+            backfill_df = self._fetch_data(backfill_ticker, max_cache_age_in_hours)
+            # Combine the original DataFrame with the backfill DataFrame
+            # DFUtil.splice is assumed to merge dataframes by aligning on the index and filling gaps
+            return DFUtil.splice(original_df, backfill_df)
         else:
-            combined_df = original_df
+            # No backfill ticker provided; return the original DataFrame unmodified
+            return original_df
 
-        # combined_df['ticker'] = ticker # Assign the original ticker to all rows
-        # combined_df.loc[combined_df.index < original_df.index.min(), 'ticker'] = backfill_ticker # Update ticker for backfill rows
-
-        if interval == "daily":
-            # No aggregation is needed if daily data is requested
-            return combined_df
-        elif interval == "weekly":
-            # Aggregate data on a weekly basis
-            return combined_df.resample("W").last()
-        elif interval == "monthly":
-            # Aggregate data on a monthly basis, similar to get_monthly_data
-            return combined_df.resample("ME").last()
-        else:
-            raise ValueError(
-                f"Unsupported interval: {interval}. Supported intervals are 'daily', 'weekly', 'monthly'."
-            )
-
-    def _fetch_data(self, ticker: str) -> pd.DataFrame:
+    def _fetch_data(self, ticker: str, max_cache_age_in_hours: int) -> pd.DataFrame:
         """
         Retrieve data for the given ticker symbol. This method first checks if
         the data is available in the cache. If it is, the cached data is returned.
@@ -91,38 +106,29 @@ class BaseDataSource(ABC):
         """
         cache_path = CacheUtil.cache_path(self.name, ticker)
 
-        # Check if data is cached
+        # Check if data is cached and not stale
         if CacheUtil.is_cached(cache_path):
-            cached_df = CacheUtil.load_from_cache(cache_path)
-            if CacheUtil.is_stale(cache_path) or self.force_refresh:
-                # In theory we could just fetch the data from the source
-                # and replace the cache with the latest version. However,
-                # I want to merge the new data with the old data to avoid
-                # losing any rows that might not come back from the source.
-                # This approach basically allows us to accumulate data over time
-                # and avoids losing data if a data source has limitations on how
-                # much data is returned.
-
-                # Fetch and format the latest data from the source
-                latest_df = self._fetch_and_process_data(ticker)
-
-                # Merge updates from latest into cached
-                merged_df = DFUtil.merge(cached_df, latest_df)
-
-                # Cache the merged data
-                CacheUtil.save_to_cache(cache_path, merged_df)
-
-                return merged_df
-            else:
+            if not CacheUtil.is_stale(cache_path, max_cache_age_in_hours):
+                logger.info(f"Loading data for {ticker} from cache.")
+                cached_df = CacheUtil.load_from_cache(cache_path)
                 return cached_df
+            else:
+                logger.info(f"Cache for {ticker} is stale.")
         else:
-            # Fetch and format the latest data from the source
+            logger.info(f"No cache found for {ticker}.")
+
+        # Fetch and cache data
+        try:
+            logger.info(f"Fetching data for {ticker}...")
             latest_df = self._fetch_and_process_data(ticker)
+        except Exception as e:
+            logger.error(f"Failed to fetch data for {ticker}: {e}")
+            raise
 
-            # Cache the fetched data
-            CacheUtil.save_to_cache(cache_path, latest_df)
+        CacheUtil.save_to_cache(cache_path, latest_df)
+        logger.info(f"Data for {ticker} fetched and cached.")
 
-            return latest_df
+        return latest_df
 
     def _fetch_and_process_data(self, ticker: str) -> pd.DataFrame:
         # Fetch data from source via subclass-specific method
@@ -171,3 +177,22 @@ class BaseDataSource(ABC):
         # df[numeric_cols] = df[numeric_cols].round(12)
 
         return df
+
+    def _aggregate_data(self, df: pd.DataFrame, interval: str) -> pd.DataFrame:
+        """Aggregate data based on the specified interval."""
+        resample_rules = {
+            "daily": None,
+            "weekly": "W",
+            "monthly": "ME",
+        }
+
+        freq = resample_rules.get(interval)
+        if freq is None and interval != "daily":
+            raise ValueError(
+                f"Unsupported interval: {interval}. Supported intervals are 'daily', 'weekly', 'monthly'."
+            )
+
+        if freq:
+            return df.resample(freq).last()
+        else:
+            return df

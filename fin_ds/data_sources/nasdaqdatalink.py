@@ -1,5 +1,6 @@
 import pandas as pd
 
+from fin_ds.data_source_factory import DataSourceFactory
 from fin_ds.data_sources.base_data_source import BaseDataSource
 
 
@@ -40,7 +41,7 @@ class NasdaqDataLinkDataSource(BaseDataSource):
         "split",
     ]
 
-    def __init__(self, name, api_key, force_refresh=False):
+    def __init__(self, name, api_key):
         """
         Initialize a Tiingo data source object.
 
@@ -53,7 +54,7 @@ class NasdaqDataLinkDataSource(BaseDataSource):
             None
         """
         # Call the base class __init__
-        super().__init__(name, force_refresh)
+        super().__init__(name)
 
     def _fetch_data_from_source(self, ticker: str) -> pd.DataFrame:
         """
@@ -88,3 +89,6 @@ class NasdaqDataLinkDataSource(BaseDataSource):
         df = df.set_index("date")
 
         return df
+
+
+DataSourceFactory.register_data_source(NasdaqDataLinkDataSource)

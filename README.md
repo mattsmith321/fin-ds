@@ -7,7 +7,7 @@
 
 ```python
 ds = DataSourceFactory("Tiingo")
-df = df.get_ticker_data("AAPL")
+df = df.get_eod_data("AAPL")
 ```
 
 To see the list of available data sources call `DataSourceFactory.data_sources`:
@@ -77,18 +77,24 @@ At this point in time, there are no exposed configuration options.
 
 ## Usage
 
-### Built-in data sources
-The package comes with a variety of built-in data sources that can be easily accessed and used to fetch data. To use a built-in data source, simply instantiate the DataSourceFactory with the name of the data source you wish to use.
+### Default data source
+fin-ds uses the YFinance library as the default data source.
+This means that a data source named does not have to be passed to the DataSourceFactory() constructor.
 
-Example:
 ```python
-from fin_ds import DataSourceFactory
+ds = DataSourceFactory()
+df = ds.get_eod_data("AAPL")
+```
 
-# Create an instance of the AlphaVantage data source
-alpha_vantage_ds = DataSourceFactory("AlphaVantage")
+### Built-in data sources
 
-# Now you can use the data source instance to fetch data
-data = alpha_vantage_ds.get_ticker_data("AAPL")
+fin-ds comes with several built-in data sources that can be easily accessed and used to fetch data.
+To use a built-in data source, simply instantiate the DataSourceFactory with the name of the data source you wish to use.
+The nice thing about this approach is that it allows you to change the data source but not have to change any code to deal with the output since each data source is mapped back to the same underlying structure.
+
+```python
+ds = DataSourceFactory("AlphaVantage")
+df = ds.get_eod_data("AAPL")
 ```
 
 The available built-in data sources include:
@@ -100,19 +106,22 @@ The available built-in data sources include:
 * YFinance
 
 You can list all available data sources using:
+
 ```python
-print(DataSourceFactory.data_sources)
+print(DataSourceFactory.get_data_source_names())
 ```
 
 ### Custom Data Sources
 
-To extend the functionality with your own data sources, you can create custom data source classes and register them with the `DataSourceFactory`. Custom data source classes should subclass `BaseDataSource` and implement the required methods.
+To extend the functionality with your own data sources, you can create custom 
+data source classes and register them with the `DataSourceFactory`. Custom data
+source classes should subclass `BaseDataSource` and implement the required methods.
 
 #### Creating a Custom Data Source
 
 1. **Subclass `BaseDataSource`**: Your custom data source class should inherit from `BaseDataSource`.
 
-2. **Implement Required Methods**: At a minimum, your class should implement the `get_ticker_data` method.
+2. **Implement Required Methods**: At a minimum, your class should implement the `get_eod_data` method.
 
 #### Example:
 
@@ -121,7 +130,7 @@ from fin_ds.data_sources.base_data_source import BaseDataSource
 import pandas as pd
 
 class MyCustomDataSource(BaseDataSource):
-    def get_ticker_data(self, ticker, interval="daily"):
+    def get_eod_data(self, ticker, interval="daily"):
         # Custom logic to fetch data
         # For demonstration, return an empty DataFrame
         return pd.DataFrame()
@@ -140,7 +149,7 @@ Once registered, you can instantiate your custom data source using the `DataSour
 my_custom_ds = DataSourceFactory("MyCustomDataSource")
 
 # Use it to fetch data
-data = my_custom_ds.get_ticker_data("AAPL")
+data = my_custom_ds.get_eod_data("AAPL")
 ```
 
 ### Tips for Custom Data Sources
@@ -213,8 +222,6 @@ Problems fetching data can arise due to various reasons:
 If you've gone through these steps and still face issues, consider seeking further assistance by:
 - **Checking the Documentation**: Review the package documentation for any additional troubleshooting tips or known issues.
 - **GitHub Issues**: If you suspect a bug or have a feature request, use the GitHub Issues page for the project to search for existing issues or create a new one.
-  
-
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -228,15 +235,16 @@ For a more detailed changelog, including the list of all changes for each versio
 * 0.3.1 - Fixed how tickers with special characters are handled (at least for BRK-A).
 * 1.0.0 - Made changes to class and module names to support dynamic loading.
 * 1.1.0 - Added dynamic registration of custom data source classes.
-* 2.0.0 - Added ability to backfill tickers to extend data. This required adding the ticker column so any previous cached data files need to be deleted.
+* 2.0.0 - Added ability to backfill tickers to extend data.
+This required adding the ticker column so any previous cached data files need to be deleted.
+* 3.0.0 - Significant refactoring to improve testability.
+Removed the list of backfill ticker associations and changed to allow submitting a backfill ticker.
+Removed merging of cached data with new data to avoid issues with splits and other adjustments.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-
-### 5. Include Contribution Guidelines
-
-```markdown
 ## Contributing
 
 Contributions are welcome! If you'd like to contribute, please follow these steps:
@@ -247,6 +255,7 @@ Contributions are welcome! If you'd like to contribute, please follow these step
 4. Push your branch and submit a pull request.
 
 Please ensure your code adheres to the [Black](https://github.com/psf/black) code style, and include unit tests for new features or fixes. For more details, check out our CONTRIBUTING.md file.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

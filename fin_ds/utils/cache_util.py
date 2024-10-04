@@ -37,9 +37,7 @@ class CacheUtil:
         if cache_path_format is None:
             cache_path_format = cls.DEFAULT_CACHE_PATH_FORMAT
 
-        formatted_path_str = cache_path_format.format(
-            data_source=data_source, ticker=ticker
-        )
+        formatted_path_str = cache_path_format.format(data_source=data_source, ticker=ticker)
 
         return Path(formatted_path_str)
 
@@ -63,13 +61,13 @@ class CacheUtil:
         return is_cached
 
     @staticmethod
-    def is_stale(cache_path: Path, max_age_hours: int = 12) -> bool:
+    def is_stale(cache_path: Path, max_cache_age_in_hours: int) -> bool:
         """
         Checks if the cache data is stale and needs to be refreshed based on its age.
 
         Parameters:
         - cache_path: The Path object representing the cache file.
-        - max_age_hours: The maximum allowed age of the cache file in hours.
+        - max_cache_age_in_hours: The maximum allowed age of the cache file in hours.
 
         Returns:
         - True if the cache data is stale, False otherwise.
@@ -77,7 +75,7 @@ class CacheUtil:
         now = datetime.now()
         mod_time = datetime.fromtimestamp(cache_path.stat().st_mtime)
         file_age = now - mod_time
-        return file_age > timedelta(hours=max_age_hours)
+        return file_age > timedelta(hours=max_cache_age_in_hours)
 
     @staticmethod
     def load_from_cache(cache_path: Path) -> pd.DataFrame:
@@ -94,6 +92,13 @@ class CacheUtil:
         start_time = time.time()
         try:
             data = pd.read_csv(cache_path, index_col=0, parse_dates=True)
+
+            # Proactively cast float-like columns to float64
+            float_columns = data.select_dtypes(include=["float"]).columns
+            data[float_columns] = (
+                data[float_columns].apply(pd.to_numeric, errors="coerce").astype("float64")
+            )
+
             logger.info(f"Data successfully loaded from {cache_path}")
         except Exception as e:
             logger.error(

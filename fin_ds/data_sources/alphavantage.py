@@ -1,5 +1,6 @@
 import pandas as pd
 
+from fin_ds.data_source_factory import DataSourceFactory
 from fin_ds.data_sources.base_data_source import BaseDataSource
 
 
@@ -26,9 +27,9 @@ class AlphaVantageDataSource(BaseDataSource):
         "dividend",
     ]
 
-    def __init__(self, name, api_key, force_refresh=False):
+    def __init__(self, name, api_key):
         # Call the base class __init__
-        super().__init__(name, force_refresh)
+        super().__init__(name)
 
         # Lazy load the library to avoid importing it if not needed
         from alpha_vantage.timeseries import TimeSeries
@@ -41,3 +42,6 @@ class AlphaVantageDataSource(BaseDataSource):
         df = self.api_client.get_monthly_adjusted(ticker)[0]
 
         return df
+
+
+DataSourceFactory.register_data_source(AlphaVantageDataSource)

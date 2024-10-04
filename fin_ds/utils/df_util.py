@@ -22,11 +22,19 @@ class DFUtil:
         # FutureWarning: Setting an item of incompatible dtype is deprecated and will raise in a future error of pandas.
         # Value '[...]' has dtype incompatible with float64, please explicitly cast to a compatible dtype first.
         # But the data was already float64, so I'm casting it again to float64 to suppress the warning.
-        for col in float_columns:
-            df2[col] = pd.to_numeric(df2[col], errors="coerce").astype("float64")
+        # for col in float_columns:
+        #     if col in df2.columns:
+        #         df2[col] = pd.to_numeric(df2[col], errors="coerce").astype("float64")
 
         # Update df1 in-place with changed values from df2
         df1.update(df2)
+
+        # Use infer_objects to fix types post-update to avoid FutureWarning
+        # Downcasting behavior in Series and DataFrame methods 'where', 'mask', and 'clip' is deprecated.
+        # df1 = df1.infer_objects(copy=False)
+
+        # Explicitly cast float columns to float64 post-update
+        # df1[float_columns] = df1[float_columns].astype("float64")
 
         # Append new rows in df2 to df1
         new_rows = df2.loc[~df2.index.isin(df1.index)]
@@ -41,17 +49,24 @@ class DFUtil:
         original_df["pct_change"] = original_df[column_name].pct_change()
         backfill_df["pct_change"] = backfill_df[column_name].pct_change()
 
-        # Find the last overlapping date, which is our splice point
-        splice_point = backfill_df.index.intersection(original_df.index)[0]
+        # Find the overlapping date(s), if any
+        overlapping_indices = backfill_df.index.intersection(original_df.index)
 
-        # Calculate the adjustment ratio
-        adjustment_ratio = (
-            original_df.loc[splice_point, column_name]
-            / backfill_df.loc[splice_point, column_name]
-        )
+        if overlapping_indices.empty:
+            # If no overlap, no adjustment ratio needed
+            adjustment_ratio = None  # Just for debugging or additional logging if needed
+        else:
+            # If there is an overlap, take the first common date as the splice point
+            splice_point = overlapping_indices[0]
 
-        # Adjust the backfill dataframe 'adj_close' values
-        backfill_df[column_name] *= adjustment_ratio
+            # Calculate the adjustment ratio
+            adjustment_ratio = (
+                original_df.loc[splice_point, column_name]
+                / backfill_df.loc[splice_point, column_name]
+            )
+
+            # Adjust the backfill dataframe 'adj_close' values
+            backfill_df[column_name] *= adjustment_ratio
 
         # Drop the 'pct_change' column as it's no longer needed
         original_df.drop("pct_change", axis=1, inplace=True)
